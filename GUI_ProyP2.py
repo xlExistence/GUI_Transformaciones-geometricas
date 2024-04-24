@@ -1,45 +1,59 @@
-import customtkinter
-import tkinter
-import tkinter.messagebox
+import customtkinter as ctk, sys
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
-customtkinter.set_appearance_mode("System")
-customtkinter.set_default_color_theme("green")
+ctk.set_appearance_mode("System")
+ctk.set_default_color_theme("green")
 
-class GUI(customtkinter.CTk):
+class GUI(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        # Propiedades de pantalla
+    # Propiedades de pantalla
         self.title("ProyP2. GUI_Transformaciones geométricas")
         self.geometry(f"{1100}x{580}")
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        # TabView
-        self.tabview = customtkinter.CTkTabview(self)
+        self.protocol("WM_DELETE_WINDOW", lambda: sys.exit())
+        self.update()
+
+    # TabView
+        self.tabview = ctk.CTkTabview(self)
         self.tabview.grid(sticky="nsew", padx=10, pady=(0, 10))
         self.tabview.add("2D")
         self.tabview.add("3D")
         
+    # Tab 2D
         Tab_2D = self.tabview.tab("2D")
 
-        self.textbox = customtkinter.CTkTextbox(Tab_2D)
-        self.textbox.grid(row=0, column=0, sticky="nsew")
-        self.textbox.insert("0.0", "CTkTextbox\n\n" + "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.\n\n" * 20)
+        # Frame 1
+        frame1 = ctk.CTkFrame(Tab_2D, fg_color="#201C1C")
+        frame1.grid(row=0, column=0, sticky="nsew")
 
-        # frame1 = customtkinter.CTkFrame(Tab_2D)
-        # frame1.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
-        # label_frame1 = customtkinter.CTkLabel(frame1, text="Frame 1")
-        # label_frame1.pack()
+        label_frame1 = ctk.CTkLabel(frame1, text=f"{frame1.cget("fg_color")}")
+        label_frame1.grid(row=0, column=0)
 
-        frame2 = customtkinter.CTkFrame(Tab_2D)
-        frame2.grid(row=0, column=1, sticky="nsew")
-        label_frame2 = customtkinter.CTkLabel(frame2, text="Frame 2")
-        label_frame2.pack()
+        # btn = ctk.CTkButton(frame1, command=self.update_window)
+        # btn.grid(row=1, column=0)
+
+        # Frame 2
+        self.frame2 = ctk.CTkFrame(Tab_2D, fg_color="#818181")
+        self.frame2.grid(row=0, column=1, padx=(10, 0), sticky="nsew")
+
+        # fig = plt.figure(figsize=(5, 4))
+        # ax = fig.add_subplot(111)
+        # ax.plot([1, 2, 3, 4], [10, 20, 25, 30], color='lightblue', linewidth=3)
+        # canvas = FigureCanvasTkAgg(fig, master=frame2)
+        # canvas.draw()
+        # canvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
+
+        frame1.grid_rowconfigure(0, weight=1)
+        frame1.grid_rowconfigure(1, weight=5)
 
         Tab_2D.grid_columnconfigure(0, weight=1)
-        Tab_2D.grid_columnconfigure(1, weight=6)
+        Tab_2D.grid_columnconfigure(1, weight=2)
         Tab_2D.grid_rowconfigure(0, weight=1)
 
         # create radiobutton frame
@@ -55,19 +69,33 @@ class GUI(customtkinter.CTk):
         # self.radio_button_3 = customtkinter.CTkRadioButton(master=Tab_2D, variable=self.radio_var, value=2)
         # self.radio_button_3.grid(row=3, column=2, pady=10, padx=20, sticky="n")
 
+    # Tab 3D
         Tab_3D = self.tabview.tab("3D")
         Tab_3D.grid_columnconfigure(1, weight=1)
+
+        self.update_window()
+    
+    def update_window(self):
+        fig, _ = plt.subplots()
+        canvas = FigureCanvasTkAgg(fig, master=self.frame2)
+        canvas.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=1)
+
+        toolbar = NavigationToolbar2Tk(canvas, self.frame2, pack_toolbar=False)
+        toolbar.update()
+        toolbar.pack(side=ctk.BOTTOM, fill=ctk.X)
+
+        self.update()
         
     def open_input_dialog_event(self):
-        dialog = customtkinter.CTkInputDialog(text="Type in a number:", title="CTkInputDialog")
+        dialog = ctk.CTkInputDialog(text="Type in a number:", title="CTkInputDialog")
         print("CTkInputDialog:", dialog.get_input())
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
-        customtkinter.set_appearance_mode(new_appearance_mode)
+        ctk.set_appearance_mode(new_appearance_mode)
 
     def change_scaling_event(self, new_scaling: str):
         new_scaling_float = int(new_scaling.replace("%", "")) / 100
-        customtkinter.set_widget_scaling(new_scaling_float)
+        ctk.set_widget_scaling(new_scaling_float)
 
     def sidebar_button_event(self):
         print("sidebar_button click")
