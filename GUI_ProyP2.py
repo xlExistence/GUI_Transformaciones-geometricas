@@ -2,6 +2,8 @@ import customtkinter as ctk, sys
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 import numpy as np
+import ast
+import copy
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("green")
@@ -20,6 +22,13 @@ class GUI(ctk.CTk):
 
         self.protocol("WM_DELETE_WINDOW", lambda: sys.exit())
         self.update()
+
+        self.ventana_aux = None
+
+        self.figura2D = []
+        self.uniones2D = []
+        self.figura3D = []
+        self.uniones3D = []
 
     # TabView
         self.tabview = ctk.CTkTabview(self)
@@ -40,6 +49,13 @@ class GUI(ctk.CTk):
                                           values=["Rotación", "Traslación", "Espejo", "Cambio de escala"],
                                           command=self.mostrar_entradas_2D)
         self.menu_opciones.place(relx=0.5, rely=0.1, anchor="center")
+
+        #  Botón agregar punto
+        self.btn_add = ctk.CTkButton(self.frame1_1, text="+", command=self.ventana_añadir_2D)
+        self.btn_add.place(relx=0.87, rely=0.02, relwidth=0.09)
+        #  Botón unir punto
+        self.btn_bind = ctk.CTkButton(self.frame1_1, text="---", command=self.ventana_unir_2D)
+        self.btn_bind.place(relx=0.87, rely=0.085, relwidth=0.09)
 
         #  Rotación
         self.rotacion = []
@@ -184,8 +200,88 @@ class GUI(ctk.CTk):
         # Elementos iniciales (mostrar botones y figuras)
         self.mostrar_entradas_2D("Rotación")
         self.mostrar_entradas_3D("Rotación")
-        self.actualizar_plot_2D(Transformaciones.figura_2d())
+        self.actualizar_plot_2D(self.figura2D)
         self.actualizar_plot_3D(Transformaciones.figura_3d())
+
+    
+    def ventana_añadir_2D(self):
+        if not self.ventana_aux:
+            self.ventana_aux = ctk.CTkToplevel(self)
+            self.ventana_aux.title("Añadir punto")
+            self.ventana_aux.geometry(f"{300}x{200}")
+            self.ventana_aux.resizable(False, False)
+            self.ventana_aux.protocol("WM_DELETE_WINDOW", self.close_ventana_2D)
+
+            self.p_label = ctk.CTkLabel(self.ventana_aux, text="Ingresa las coordenadas del punto:")
+            self.p_label.place(relx=0.5, rely=0.1, anchor="center")
+
+            self.p_eje_x = ctk.CTkEntry(self.ventana_aux, placeholder_text="x")
+            self.p_eje_x.place(relx=0.5, rely=0.3, anchor="center")
+            self.p_eje_y = ctk.CTkEntry(self.ventana_aux, placeholder_text="y")
+            self.p_eje_y.place(relx=0.5, rely=0.5, anchor="center")
+
+            self.p_añadir_btn = ctk.CTkButton(self.ventana_aux, text="Añadir", command=self.añadir_punto_2D)
+            self.p_añadir_btn.place(relx=0.5, rely=0.7, anchor="center")
+
+    def ventana_unir_2D(self):
+        if not self.ventana_aux:
+            self.ventana_aux = ctk.CTkToplevel(self)
+            self.ventana_aux.title("Unir puntos")
+            self.ventana_aux.geometry(f"{300}x{200}")
+            self.ventana_aux.resizable(False, False)
+            self.ventana_aux.protocol("WM_DELETE_WINDOW", self.close_ventana_2D)
+
+            if len(self.figura2D) >= 2:
+                self.ups_label = ctk.CTkLabel(self.ventana_aux, text="Selecciona los puntos a unir:")
+                self.ups_label.place(relx=0.5, rely=0.1, anchor="center")
+
+                self.u_p1_2D = ctk.CTkOptionMenu(self.ventana_aux, dynamic_resizing=False,
+                                                values=list(map(str, self.figura2D)),
+                                                command=self.punto_seleccionado_2D)
+                self.u_p1_2D.place(relx=0.3, rely=0.3, anchor="center", relwidth=0.3)
+            else:
+                self.ups_label = ctk.CTkLabel(self.ventana_aux, text="No es posible unir puntos")
+                self.ups_label.place(relx=0.5, rely=0.3, anchor="center")
+
+                self.p_añadir_btn = ctk.CTkButton(self.ventana_aux, text="Cerrar", command=self.close_ventana_2D)
+                self.p_añadir_btn.place(relx=0.5, rely=0.7, anchor="center")
+    def punto_seleccionado_2D(self, p1):
+        puntos_restantes = copy.deepcopy(self.figura2D)
+        puntos_restantes.remove(ast.literal_eval(p1))
+        self.u_p2_2D = ctk.CTkOptionMenu(self.ventana_aux, dynamic_resizing=False,
+                                        values=list(map(str, puntos_restantes)))
+        self.u_p2_2D.place(relx=0.7, rely=0.3, anchor="center", relwidth=0.3)
+
+        self.p_unir_btn = ctk.CTkButton(self.ventana_aux, text="Unir", command=self.unir_puntos_2D)
+        self.p_unir_btn.place(relx=0.5, rely=0.7, anchor="center")
+
+    def close_ventana_2D(self):
+        self.ventana_aux.destroy()
+        self.ventana_aux = None
+        
+    def añadir_punto_2D(self):
+        x = float(self.p_eje_x.get()) if '.' in self.p_eje_x.get() else int(self.p_eje_x.get())
+        y = float(self.p_eje_y.get()) if '.' in self.p_eje_y.get() else int(self.p_eje_y.get())
+
+        if [x, y] not in self.figura2D:
+            self.figura2D.append([x, y])
+            
+        self.actualizar_plot_2D(self.figura2D)
+
+        self.ventana_aux.destroy()
+        self.ventana_aux = None
+    def unir_puntos_2D(self):
+        i_p1 = self.figura2D.index(ast.literal_eval(self.u_p1_2D.get()))
+        i_p2 = self.figura2D.index(ast.literal_eval(self.u_p2_2D.get()))
+
+        if [i_p1, i_p1] not in self.uniones2D and [i_p1, i_p1] not in self.uniones2D:
+            self.uniones2D.append([i_p1, i_p2])
+
+        self.actualizar_plot_2D(self.figura2D)
+
+        self.ventana_aux.destroy()
+        self.ventana_aux = None
+    
 
     def actualizar_plot_2D(self, p, titulo='', new_p=None):
         self.ax_2D.clear()
@@ -199,13 +295,9 @@ class GUI(ctk.CTk):
                             [punto[1] for punto in p],
                             c_p, label=l)
             # Lineas
-            for i in range(len(p)):
-                if i == len(p) - 1:
-                    self.ax_2D.plot([p[0][0], p[len(p) - 1][0]], 
-                                    [p[0][1], p[len(p) - 1][1]], c_l)
-                    break
-                self.ax_2D.plot([p[i][0], p[i+1][0]],
-                                [p[i][1], p[i+1][1]], c_l)
+            for i in range(len(self.uniones2D)):
+                self.ax_2D.plot([p[self.uniones2D[i][0]][0], p[self.uniones2D[i][1]][0]],
+                                [p[self.uniones2D[i][0]][1], p[self.uniones2D[i][1]][1]], c_l)
             
             if new_p:
                 p = new_p
@@ -325,7 +417,7 @@ class GUI(ctk.CTk):
 
     def aplicar_transformacion_2D(self):
         transformacion = self.menu_opciones.get()
-        puntos_originales = Transformaciones.figura_2d()
+        puntos_originales = self.figura2D
 
         if transformacion == "Rotación":
             angulo_r = float(self.r_angulo_input.get())
@@ -355,9 +447,9 @@ class GUI(ctk.CTk):
 
             self.actualizar_plot_2D(puntos_originales, "Transformación: Cambio de escala", puntos_escalados)
 
-
     def aplicar_transformacion_3D(self):
         transformacion = self.menu_opciones_3D.get()
+
 
     def validar_entrada(self, entrada, can_neg):
         valor = entrada.get()
@@ -376,8 +468,8 @@ class GUI(ctk.CTk):
     def bind_validacion(self):
         # Rotación
         self.r_angulo_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.r_angulo_input, True))
-        self.r_centro_x_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.r_centro_x_input, False))
-        self.r_centro_y_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.r_centro_y_input, False))
+        self.r_centro_x_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.r_centro_x_input, True))
+        self.r_centro_y_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.r_centro_y_input, True))
 
         # Traslación
         self.t_x_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.t_x_input, True))
@@ -385,6 +477,10 @@ class GUI(ctk.CTk):
 
         # Espejo
         # -
+
+        # Cambio de escala
+        self.ce_x_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.ce_x_input, False))
+        self.ce_y_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.ce_y_input, False))
 
 class Transformaciones():
 
@@ -440,10 +536,6 @@ class Transformaciones():
     
 
 # FIGURAS
-
-    def figura_2d():
-        return [[1, 1], [5, 1], [5, 5], [1, 5]] # Cuadrado
-    
     def figura_3d():
         return [[1, 0, 1], [5, 0, 1], [5, 0, 5], [1, 0, 5], [1, 4, 1], [5, 4, 1], [5, 4, 5], [1, 4, 5]] # Cubo
 
