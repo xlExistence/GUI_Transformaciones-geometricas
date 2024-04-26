@@ -81,10 +81,10 @@ class GUI(ctk.CTk):
 
         #  Espejo
         self.espejo = []
-        self.e_eje_label = ctk.CTkLabel(self.frame1_1, text="Selecciona el eje de reflexión:", anchor="w")
+        self.e_eje_label = ctk.CTkLabel(self.frame1_1, text="Selecciona el plano de reflexión:", anchor="w")
         self.espejo.append(self.e_eje_label)
         self.e_eje = ctk.CTkOptionMenu(self.frame1_1, dynamic_resizing=False,
-                                          values=["Eje x", "Eje y"])
+                                          values=["Plano x", "Plano y"])
         self.espejo.append(self.e_eje)
         
         #  Cambio de escala
@@ -123,6 +123,13 @@ class GUI(ctk.CTk):
                                           command=self.mostrar_entradas_3D)
         self.menu_opciones_3D.place(relx=0.5, rely=0.1, anchor="center")
 
+        #  Botón agregar punto
+        self.btn_add_3D = ctk.CTkButton(self.frame2_1, text="+", command=self.ventana_añadir_3D)
+        self.btn_add_3D.place(relx=0.87, rely=0.02, relwidth=0.09)
+        #  Botón unir punto
+        self.btn_bind_3D = ctk.CTkButton(self.frame2_1, text="---", command=self.ventana_unir_3D)
+        self.btn_bind_3D.place(relx=0.87, rely=0.085, relwidth=0.09)
+
         #  Rotación
         self.rotacion_3D = []
         self.r_angulo_label_3D = ctk.CTkLabel(self.frame2_1, text="Ángulo de rotación:", anchor="w")
@@ -156,10 +163,10 @@ class GUI(ctk.CTk):
 
         #  Espejo
         self.espejo_3D = []
-        self.e_eje_label_3D = ctk.CTkLabel(self.frame2_1, text="Selecciona el eje de reflexión:", anchor="w")
+        self.e_eje_label_3D = ctk.CTkLabel(self.frame2_1, text="Selecciona el plano de reflexión:", anchor="w")
         self.espejo_3D.append(self.e_eje_label_3D)
         self.e_eje_3D = ctk.CTkOptionMenu(self.frame2_1, dynamic_resizing=False,
-                                          values=["Eje x", "Eje y", "Eje z"])
+                                          values=["Plano xy", "Plano xz", "Plano yz"])
         self.espejo_3D.append(self.e_eje_3D)
         
         #  Cambio de escala
@@ -196,12 +203,22 @@ class GUI(ctk.CTk):
         toolbar = NavigationToolbar2Tk(self.canvas_2D, self.frame1_2, pack_toolbar=False)
         toolbar.update()
         toolbar.pack(side=ctk.BOTTOM, fill=ctk.X)
+
+        # Creación de figura para graficacion 3D
+        self.fig_3D = plt.figure()
+        self.ax_3D = self.fig_3D.add_subplot(111, projection='3d')
+        self.canvas_3D = FigureCanvasTkAgg(self.fig_3D, master=self.frame2_2)
+        self.canvas_3D.get_tk_widget().pack(fill=ctk.BOTH, expand=1)
+
+        toolbar_3D = NavigationToolbar2Tk(self.canvas_3D, self.frame2_2, pack_toolbar=False)
+        toolbar_3D.update()
+        toolbar_3D.pack(side=ctk.BOTTOM, fill=ctk.X)
     
         # Elementos iniciales (mostrar botones y figuras)
         self.mostrar_entradas_2D("Rotación")
         self.mostrar_entradas_3D("Rotación")
         self.actualizar_plot_2D(self.figura2D)
-        self.actualizar_plot_3D(Transformaciones.figura_3d())
+        self.actualizar_plot_3D(self.figura3D)
 
     
     def ventana_añadir_2D(self):
@@ -210,7 +227,7 @@ class GUI(ctk.CTk):
             self.ventana_aux.title("Añadir punto")
             self.ventana_aux.geometry(f"{300}x{200}")
             self.ventana_aux.resizable(False, False)
-            self.ventana_aux.protocol("WM_DELETE_WINDOW", self.close_ventana_2D)
+            self.ventana_aux.protocol("WM_DELETE_WINDOW", self.close_ventana)
 
             self.p_label = ctk.CTkLabel(self.ventana_aux, text="Ingresa las coordenadas del punto:")
             self.p_label.place(relx=0.5, rely=0.1, anchor="center")
@@ -229,7 +246,7 @@ class GUI(ctk.CTk):
             self.ventana_aux.title("Unir puntos")
             self.ventana_aux.geometry(f"{300}x{200}")
             self.ventana_aux.resizable(False, False)
-            self.ventana_aux.protocol("WM_DELETE_WINDOW", self.close_ventana_2D)
+            self.ventana_aux.protocol("WM_DELETE_WINDOW", self.close_ventana)
 
             if len(self.figura2D) >= 2:
                 self.ups_label = ctk.CTkLabel(self.ventana_aux, text="Selecciona los puntos a unir:")
@@ -243,8 +260,8 @@ class GUI(ctk.CTk):
                 self.ups_label = ctk.CTkLabel(self.ventana_aux, text="No es posible unir puntos")
                 self.ups_label.place(relx=0.5, rely=0.3, anchor="center")
 
-                self.p_añadir_btn = ctk.CTkButton(self.ventana_aux, text="Cerrar", command=self.close_ventana_2D)
-                self.p_añadir_btn.place(relx=0.5, rely=0.7, anchor="center")
+                self.p_cerrar_btn = ctk.CTkButton(self.ventana_aux, text="Cerrar", command=self.close_ventana)
+                self.p_cerrar_btn.place(relx=0.5, rely=0.7, anchor="center")
     def punto_seleccionado_2D(self, p1):
         puntos_restantes = copy.deepcopy(self.figura2D)
         puntos_restantes.remove(ast.literal_eval(p1))
@@ -254,10 +271,6 @@ class GUI(ctk.CTk):
 
         self.p_unir_btn = ctk.CTkButton(self.ventana_aux, text="Unir", command=self.unir_puntos_2D)
         self.p_unir_btn.place(relx=0.5, rely=0.7, anchor="center")
-
-    def close_ventana_2D(self):
-        self.ventana_aux.destroy()
-        self.ventana_aux = None
         
     def añadir_punto_2D(self):
         x = float(self.p_eje_x.get()) if '.' in self.p_eje_x.get() else int(self.p_eje_x.get())
@@ -274,7 +287,7 @@ class GUI(ctk.CTk):
         i_p1 = self.figura2D.index(ast.literal_eval(self.u_p1_2D.get()))
         i_p2 = self.figura2D.index(ast.literal_eval(self.u_p2_2D.get()))
 
-        if [i_p1, i_p1] not in self.uniones2D and [i_p1, i_p1] not in self.uniones2D:
+        if [i_p1, i_p2] not in self.uniones2D and [i_p2, i_p1] not in self.uniones2D:
             self.uniones2D.append([i_p1, i_p2])
 
         self.actualizar_plot_2D(self.figura2D)
@@ -282,6 +295,89 @@ class GUI(ctk.CTk):
         self.ventana_aux.destroy()
         self.ventana_aux = None
     
+
+    def ventana_añadir_3D(self):
+        if not self.ventana_aux:
+            self.ventana_aux = ctk.CTkToplevel(self)
+            self.ventana_aux.title("Añadir punto")
+            self.ventana_aux.geometry(f"{300}x{230}")
+            self.ventana_aux.resizable(False, False)
+            self.ventana_aux.protocol("WM_DELETE_WINDOW", self.close_ventana)
+
+            self.p_label_3D = ctk.CTkLabel(self.ventana_aux, text="Ingresa las coordenadas del punto:")
+            self.p_label_3D.place(relx=0.5, rely=0.1, anchor="center")
+
+            self.p_eje_x_3D = ctk.CTkEntry(self.ventana_aux, placeholder_text="x")
+            self.p_eje_x_3D.place(relx=0.5, rely=0.27, anchor="center")
+            self.p_eje_y_3D = ctk.CTkEntry(self.ventana_aux, placeholder_text="y")
+            self.p_eje_y_3D.place(relx=0.5, rely=0.44, anchor="center")
+            self.p_eje_z_3D = ctk.CTkEntry(self.ventana_aux, placeholder_text="z")
+            self.p_eje_z_3D.place(relx=0.5, rely=0.61, anchor="center")
+
+            self.p_añadir_btn_3D = ctk.CTkButton(self.ventana_aux, text="Añadir", command=self.añadir_punto_3D)
+            self.p_añadir_btn_3D.place(relx=0.5, rely=0.78, anchor="center")
+
+    def ventana_unir_3D(self):
+        if not self.ventana_aux:
+            self.ventana_aux = ctk.CTkToplevel(self)
+            self.ventana_aux.title("Unir puntos")
+            self.ventana_aux.geometry(f"{330}x{200}")
+            self.ventana_aux.resizable(False, False)
+            self.ventana_aux.protocol("WM_DELETE_WINDOW", self.close_ventana)
+
+            if len(self.figura3D) >= 2:
+                self.ups_label_3D = ctk.CTkLabel(self.ventana_aux, text="Selecciona los puntos a unir:")
+                self.ups_label_3D.place(relx=0.5, rely=0.1, anchor="center")
+
+                self.u_p1_3D = ctk.CTkOptionMenu(self.ventana_aux, dynamic_resizing=False,
+                                                values=list(map(str, self.figura3D)),
+                                                command=self.punto_seleccionado_3D)
+                self.u_p1_3D.place(relx=0.3, rely=0.3, anchor="center", relwidth=0.3)
+            else:
+                self.ups_label_3D = ctk.CTkLabel(self.ventana_aux, text="No es posible unir puntos")
+                self.ups_label_3D.place(relx=0.5, rely=0.3, anchor="center")
+
+                self.p_cerrar_btn_3D = ctk.CTkButton(self.ventana_aux, text="Cerrar", command=self.close_ventana)
+                self.p_cerrar_btn_3D.place(relx=0.5, rely=0.7, anchor="center")
+    def punto_seleccionado_3D(self, p1):
+        puntos_restantes = copy.deepcopy(self.figura3D)
+        puntos_restantes.remove(ast.literal_eval(p1))
+        self.u_p2_3D = ctk.CTkOptionMenu(self.ventana_aux, dynamic_resizing=False,
+                                        values=list(map(str, puntos_restantes)))
+        self.u_p2_3D.place(relx=0.7, rely=0.3, anchor="center", relwidth=0.3)
+
+        self.p_unir_btn_3D = ctk.CTkButton(self.ventana_aux, text="Unir", command=self.unir_puntos_3D)
+        self.p_unir_btn_3D.place(relx=0.5, rely=0.7, anchor="center")
+
+    def añadir_punto_3D(self):
+        x = float(self.p_eje_x_3D.get()) if '.' in self.p_eje_x_3D.get() else int(self.p_eje_x_3D.get())
+        y = float(self.p_eje_y_3D.get()) if '.' in self.p_eje_y_3D.get() else int(self.p_eje_y_3D.get())
+        z = float(self.p_eje_z_3D.get()) if '.' in self.p_eje_z_3D.get() else int(self.p_eje_z_3D.get())
+
+        if [x, y, z] not in self.figura3D:
+            self.figura3D.append([x, y, z])
+            
+        self.actualizar_plot_3D(self.figura3D)
+
+        self.ventana_aux.destroy()
+        self.ventana_aux = None
+    def unir_puntos_3D(self):
+        i_p1 = self.figura3D.index(ast.literal_eval(self.u_p1_3D.get()))
+        i_p2 = self.figura3D.index(ast.literal_eval(self.u_p2_3D.get()))
+
+        if [i_p1, i_p2] not in self.uniones3D and [i_p2, i_p1] not in self.uniones3D:
+            self.uniones3D.append([i_p1, i_p2])
+
+        self.actualizar_plot_3D(self.figura3D)
+
+        self.ventana_aux.destroy()
+        self.ventana_aux = None
+
+
+    def close_ventana(self):
+        self.ventana_aux.destroy()
+        self.ventana_aux = None
+
 
     def actualizar_plot_2D(self, p, titulo='', new_p=None):
         self.ax_2D.clear()
@@ -314,35 +410,47 @@ class GUI(ctk.CTk):
         self.ax_2D.grid(True)
         self.ax_2D.set_aspect('equal')
 
-        # plt.xlabel('X')
-        # plt.ylabel('Y')
-        # plt.title(f"{titulo}")
-        # plt.grid()
-        # plt.axis('equal')
-
         self.canvas_2D.draw()
 
         self.update()
         self.bind_validacion()
     
-    def actualizar_plot_3D(self, p, new_p=None):
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+    def actualizar_plot_3D(self, p, titulo='', new_p=None):
+        self.ax_3D.clear()
         
-        x = [1, 2, 3, 4, 5]
-        y = [1, 2, 3, 4, 5]
-        z = [1, 2, 3, 4, 5]
+        c_p_l = 'r'
+        l = 'Original'
+        for i in range(2):
+            # Puntos
+            self.ax_3D.scatter([punto[0] for punto in p],
+                               [punto[1] for punto in p],
+                               [punto[2] for punto in p],
+                               c=c_p_l, label=l)
+            # Lineas
+            for i in range(len(self.uniones3D)):
+                self.ax_3D.plot([p[self.uniones3D[i][0]][0], p[self.uniones3D[i][1]][0]],
+                                [p[self.uniones3D[i][0]][1], p[self.uniones3D[i][1]][1]], 
+                                [p[self.uniones3D[i][0]][2], p[self.uniones3D[i][1]][2]], c=c_p_l)
+            
+            if new_p:
+                p = new_p
+                c_p_l = 'b'
+                l = "Transformado"
+            else:
+                break
+
+        self.ax_3D.set_xlabel('X')
+        self.ax_3D.set_ylabel('Y')
+        self.ax_3D.set_zlabel('Z')
+        self.ax_3D.set_title(f'{titulo}')
+        self.ax_3D.legend()
+        self.ax_3D.grid(True)
+        self.ax_3D.set_aspect('equal')
         
-        ax.plot(x, y, z)
-        
-        canvas = FigureCanvasTkAgg(fig, master=self.frame2_2)
-        canvas.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=1)
-        
-        toolbar = NavigationToolbar2Tk(canvas, self.frame2_2, pack_toolbar=False)
-        toolbar.update()
-        toolbar.pack(side=ctk.BOTTOM, fill=ctk.X)
+        self.canvas_3D.draw()
         
         self.update()
+        self.bind_validacion_3D()
 
     def mostrar_entradas_2D(self, opcion):
         seleccion = ["Rotación", "Traslación", "Espejo", "Cambio de escala"].index(opcion) + 1
@@ -449,6 +557,38 @@ class GUI(ctk.CTk):
 
     def aplicar_transformacion_3D(self):
         transformacion = self.menu_opciones_3D.get()
+        puntos_originales = self.figura3D
+
+        if transformacion == "Rotación":
+            angulo_r = float(self.r_angulo_input_3D.get())
+            centro_r_x = float(self.r_centro_x_input_3D.get())
+            centro_r_y = float(self.r_centro_y_input_3D.get())
+            centro_r_z = float(self.r_centro_z_input_3D.get())
+            eje_r = self.r_eje_base_3D.get()
+
+            puntos_rotados = [Transformaciones.rotacion_3d(punto, angulo_r, [centro_r_x, centro_r_y, centro_r_z], eje_r) for punto in puntos_originales]
+
+            self.actualizar_plot_3D(puntos_originales, "Transformación: Rotación 3D", puntos_rotados)
+        elif transformacion == "Traslación":
+            vector_traslacion = [float(self.t_x_input_3D.get()), float(self.t_y_input_3D.get()), float(self.t_z_input_3D.get())]
+
+            puntos_trasladados = Transformaciones.traslacion_3d(puntos_originales, vector_traslacion)
+
+            self.actualizar_plot_3D(puntos_originales, "Transformación: Traslación 3D", puntos_trasladados)
+        elif transformacion == "Espejo":
+            eje = self.e_eje_3D.get()
+
+            puntos_reflejados = Transformaciones.espejo_3d(puntos_originales, eje)
+
+            self.actualizar_plot_3D(puntos_originales, "Transformación: Espejo 3D", puntos_reflejados)
+        elif transformacion == "Cambio de escala":
+            factor_x = float(self.ce_x_input_3D.get())
+            factor_y = float(self.ce_y_input_3D.get())
+            factor_z = float(self.ce_z_input_3D.get())
+
+            puntos_escalados = Transformaciones.cambio_escala_3d(puntos_originales, [factor_x, factor_y, factor_z])
+
+            self.actualizar_plot_3D(puntos_originales, "Transformación: Cambio de escala 3D", puntos_escalados)
 
 
     def validar_entrada(self, entrada, can_neg):
@@ -481,6 +621,25 @@ class GUI(ctk.CTk):
         # Cambio de escala
         self.ce_x_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.ce_x_input, False))
         self.ce_y_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.ce_y_input, False))
+    def bind_validacion_3D(self):
+        # Rotación
+        self.r_angulo_input_3D.bind("<KeyRelease>", lambda event: self.validar_entrada(self.r_angulo_input_3D, True))
+        self.r_centro_x_input_3D.bind("<KeyRelease>", lambda event: self.validar_entrada(self.r_centro_x_input_3D, True))
+        self.r_centro_y_input_3D.bind("<KeyRelease>", lambda event: self.validar_entrada(self.r_centro_y_input_3D, True))
+        self.r_centro_z_input_3D.bind("<KeyRelease>", lambda event: self.validar_entrada(self.r_centro_z_input_3D, True))
+
+        # Traslación
+        self.t_x_input_3D.bind("<KeyRelease>", lambda event: self.validar_entrada(self.t_x_input_3D, True))
+        self.t_y_input_3D.bind("<KeyRelease>", lambda event: self.validar_entrada(self.t_y_input_3D, True))
+        self.t_z_input_3D.bind("<KeyRelease>", lambda event: self.validar_entrada(self.t_z_input_3D, True))
+
+        # Espejo
+        # -
+
+        # Cambio de escala
+        self.ce_x_input_3D.bind("<KeyRelease>", lambda event: self.validar_entrada(self.ce_x_input_3D, False))
+        self.ce_y_input_3D.bind("<KeyRelease>", lambda event: self.validar_entrada(self.ce_y_input_3D, False))
+        self.ce_z_input_3D.bind("<KeyRelease>", lambda event: self.validar_entrada(self.ce_z_input_3D, False))
 
 class Transformaciones():
 
@@ -510,9 +669,9 @@ class Transformaciones():
     
     def espejo_2d(puntos, eje):
         # Inversión de valores en base al eje
-        if eje == "Eje x":
+        if eje == "Plano x":
             return [[punto[0], -punto[1]] for punto in puntos]
-        elif eje == "Eje y":
+        elif eje == "Plano y":
             return [[-punto[0], punto[1]] for punto in puntos]
         
     def cambio_escala_2d(puntos, factores):
@@ -533,11 +692,63 @@ class Transformaciones():
 
 # 3D
 
-    
+    def rotacion_3d(punto, angulo, centro, eje):
+        # Transformar el ángulo a radianes
+        theta = np.radians(angulo)
+        
+        # Matriz de rotación según el eje seleccionado
+        if eje == 'Eje x':
+            matriz_rotacion = np.array([[1, 0, 0],
+                                        [0, np.cos(theta), -np.sin(theta)],
+                                        [0, np.sin(theta), np.cos(theta)]])
+        elif eje == 'Eje y':
+            matriz_rotacion = np.array([[np.cos(theta), 0, np.sin(theta)],
+                                        [0, 1, 0],
+                                        [-np.sin(theta), 0, np.cos(theta)]])
+        elif eje == 'Eje z':
+            matriz_rotacion = np.array([[np.cos(theta), -np.sin(theta), 0],
+                                        [np.sin(theta), np.cos(theta), 0],
+                                        [0, 0, 1]])
+            
+        # Calcular las coordenadas relativas al centro de rotación
+        p_rel = np.array(punto) - np.array(centro)
+        
+        # Aplicar la matriz de rotación
+        p_rotado = np.dot(matriz_rotacion, p_rel)
 
-# FIGURAS
-    def figura_3d():
-        return [[1, 0, 1], [5, 0, 1], [5, 0, 5], [1, 0, 5], [1, 4, 1], [5, 4, 1], [5, 4, 5], [1, 4, 5]] # Cubo
+        # Regresar a las coordenadas originales
+        p_rotado += np.array(centro)
+        return p_rotado
+    
+    def traslacion_3d(puntos, vector_t):
+        # Suma de coordenadas con el vector de traslación
+        return [[punto[0] + vector_t[0], punto[1] + vector_t[1], punto[2] + vector_t[2]] for punto in puntos]
+
+    def espejo_3d(puntos, plano):
+        # Inversión de valores en base al plano
+        if plano == "Plano xy":
+            return [[punto[0], punto[1], -punto[2]] for punto in puntos]
+        elif plano == "Plano xz":
+            return [[punto[0], -punto[1], punto[2]] for punto in puntos]
+        elif plano == "Plano yz":
+            return [[-punto[0], punto[1], punto[2]] for punto in puntos]
+    
+    def cambio_escala_3d(puntos, factores):
+        # Calcular el centroide
+        centroid_x = sum(punto[0] for punto in puntos) / len(puntos)
+        centroid_y = sum(punto[1] for punto in puntos) / len(puntos)
+        centroid_z = sum(punto[2] for punto in puntos) / len(puntos)
+
+        # Ajustar cada punto al centroide
+        puntos_ajustados = [[punto[0] - centroid_x, punto[1] - centroid_y, punto[2] - centroid_z] for punto in puntos]
+
+        # Escalar los puntos ajustados
+        puntos_escala = [[punto[0] * factores[0], punto[1] * factores[1], punto[2] * factores[2]] for punto in puntos_ajustados]
+
+        # Reajustar los puntos escalados al punto original
+        puntos_reajustados = [[punto[0] + centroid_x, punto[1] + centroid_y, punto[2] + centroid_z] for punto in puntos_escala]
+
+        return puntos_reajustados
 
 if __name__ == "__main__":
     app = GUI()
