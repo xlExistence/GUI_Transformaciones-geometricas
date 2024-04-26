@@ -1,6 +1,7 @@
 import customtkinter as ctk, sys
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+import numpy as np
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("green")
@@ -29,16 +30,16 @@ class GUI(ctk.CTk):
      # ---------------------------------------
 
     # Tab 2D
-        Tab_2D = self.tabview.tab("2D")
+        self.Tab_2D = self.tabview.tab("2D")
 
         # Frame 1 -----------------------------------------------------------------------------------
-        self.frame1_1 = ctk.CTkFrame(Tab_2D, fg_color="#201C1C")
+        self.frame1_1 = ctk.CTkFrame(self.Tab_2D, fg_color="#201C1C")
         self.frame1_1.grid(row=0, column=0, sticky="nsew")
 
-        menu_opciones = ctk.CTkOptionMenu(self.frame1_1, dynamic_resizing=False,
+        self.menu_opciones = ctk.CTkOptionMenu(self.frame1_1, dynamic_resizing=False,
                                           values=["Rotación", "Traslación", "Espejo", "Cambio de escala"],
                                           command=self.mostrar_entradas_2D)
-        menu_opciones.place(relx=0.5, rely=0.1, anchor="center")
+        self.menu_opciones.place(relx=0.5, rely=0.1, anchor="center")
 
         #  Rotación
         self.rotacion = []
@@ -55,7 +56,7 @@ class GUI(ctk.CTk):
 
         #  Traslación
         self.traslacion = []
-        self.t_coordenadas_label = ctk.CTkLabel(self.frame1_1, text="Coordenadas de traslación:", anchor="w")
+        self.t_coordenadas_label = ctk.CTkLabel(self.frame1_1, text="Valores del vector de traslación:", anchor="w")
         self.traslacion.append(self.t_coordenadas_label)
         self.t_x_input = ctk.CTkEntry(self.frame1_1, placeholder_text="Eje x")
         self.traslacion.append(self.t_x_input)
@@ -80,37 +81,31 @@ class GUI(ctk.CTk):
         self.cambio_escala.append(self.ce_y_input)
 
         #  Botón ejecutar
-        btn = ctk.CTkButton(self.frame1_1, text="Aplicar")
-        btn.place(relx=0.5, rely=0.9, anchor="center")
+        self.btn = ctk.CTkButton(self.frame1_1, text="Aplicar", command=self.aplicar_transformacion_2D)
+        self.btn.place(relx=0.5, rely=0.9, anchor="center")
 
         # Frame 2 -----------------------------------------------------------------------------------
-        self.frame1_2 = ctk.CTkFrame(Tab_2D, fg_color="#818181")
+        self.frame1_2 = ctk.CTkFrame(self.Tab_2D, fg_color="#818181")
         self.frame1_2.grid(row=0, column=1, padx=(10, 0), sticky="nsew")
 
-        # fig = plt.figure(figsize=(5, 4))
-        # ax = fig.add_subplot(111)
-        # ax.plot([1, 2, 3, 4], [10, 20, 25, 30], color='lightblue', linewidth=3)
-        # canvas = FigureCanvasTkAgg(fig, master=frame1_2)
-        # canvas.draw()
-        # canvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
 
-        Tab_2D.grid_columnconfigure(0, weight=1)
-        Tab_2D.grid_columnconfigure(1, weight=2)
-        Tab_2D.grid_rowconfigure(0, weight=1)
+        self.Tab_2D.grid_columnconfigure(0, weight=1)
+        self.Tab_2D.grid_columnconfigure(1, weight=2)
+        self.Tab_2D.grid_rowconfigure(0, weight=1)
 
      # ---------------------------------------
 
     # Tab 3D
-        Tab_3D = self.tabview.tab("3D")
+        self.Tab_3D = self.tabview.tab("3D")
 
         # Frame 1 -----------------------------------------------------------------------------------
-        self.frame2_1 = ctk.CTkFrame(Tab_3D, fg_color="#201C1C")
+        self.frame2_1 = ctk.CTkFrame(self.Tab_3D, fg_color="#201C1C")
         self.frame2_1.grid(row=0, column=0, sticky="nsew")
 
-        menu_opciones_3D = ctk.CTkOptionMenu(self.frame2_1, dynamic_resizing=False,
+        self.menu_opciones_3D = ctk.CTkOptionMenu(self.frame2_1, dynamic_resizing=False,
                                           values=["Rotación", "Traslación", "Espejo", "Cambio de escala"],
                                           command=self.mostrar_entradas_3D)
-        menu_opciones_3D.place(relx=0.5, rely=0.1, anchor="center")
+        self.menu_opciones_3D.place(relx=0.5, rely=0.1, anchor="center")
 
         #  Rotación
         self.rotacion_3D = []
@@ -134,7 +129,7 @@ class GUI(ctk.CTk):
 
         #  Traslación
         self.traslacion_3D = []
-        self.t_coordenadas_label_3D = ctk.CTkLabel(self.frame2_1, text="Coordenadas de traslación:", anchor="w")
+        self.t_coordenadas_label_3D = ctk.CTkLabel(self.frame2_1, text="Valores del vector de traslación:", anchor="w")
         self.traslacion_3D.append(self.t_coordenadas_label_3D)
         self.t_x_input_3D = ctk.CTkEntry(self.frame2_1, placeholder_text="Eje x")
         self.traslacion_3D.append(self.t_x_input_3D)
@@ -163,36 +158,82 @@ class GUI(ctk.CTk):
         self.cambio_escala_3D.append(self.ce_z_input_3D)
 
         #  Botón ejecutar
-        btn_3D = ctk.CTkButton(self.frame2_1, text="Aplicar")
-        btn_3D.place(relx=0.5, rely=0.9, anchor="center")
+        self.btn_3D = ctk.CTkButton(self.frame2_1, text="Aplicar", command=self.aplicar_transformacion_3D)
+        self.btn_3D.place(relx=0.5, rely=0.9, anchor="center")
 
         # Frame 2 -----------------------------------------------------------------------------------
-        self.frame2_2 = ctk.CTkFrame(Tab_3D, fg_color="#818181")
+        self.frame2_2 = ctk.CTkFrame(self.Tab_3D, fg_color="#818181")
         self.frame2_2.grid(row=0, column=1, padx=(10, 0), sticky="nsew")
 
-        Tab_3D.grid_columnconfigure(0, weight=1)
-        Tab_3D.grid_columnconfigure(1, weight=2)
-        Tab_3D.grid_rowconfigure(0, weight=1)
+
+        self.Tab_3D.grid_columnconfigure(0, weight=1)
+        self.Tab_3D.grid_columnconfigure(1, weight=2)
+        self.Tab_3D.grid_rowconfigure(0, weight=1)
     
     # ---------------------------------------
-    
-        self.mostrar_entradas_2D("Rotación")
-        self.mostrar_entradas_3D("Rotación")
-        self.actualizar_plot_2D()
-        self.actualizar_plot_3D()
 
-    def actualizar_plot_2D(self):
-        fig, _ = plt.subplots()
-        canvas = FigureCanvasTkAgg(fig, master=self.frame1_2)
-        canvas.get_tk_widget().pack(side=ctk.TOP, fill=ctk.BOTH, expand=1)
+        # Creación de figura para graficacion 2D
+        self.fig_2D, self.ax_2D = plt.subplots()
+        self.canvas_2D = FigureCanvasTkAgg(self.fig_2D, master=self.frame1_2)
+        self.canvas_2D.get_tk_widget().pack(fill=ctk.BOTH, expand=1)
 
-        toolbar = NavigationToolbar2Tk(canvas, self.frame1_2, pack_toolbar=False)
+        toolbar = NavigationToolbar2Tk(self.canvas_2D, self.frame1_2, pack_toolbar=False)
         toolbar.update()
         toolbar.pack(side=ctk.BOTTOM, fill=ctk.X)
+    
+        # Elementos iniciales (mostrar botones y figuras)
+        self.mostrar_entradas_2D("Rotación")
+        self.mostrar_entradas_3D("Rotación")
+        self.actualizar_plot_2D(Transformaciones.figura_2d())
+        self.actualizar_plot_3D(Transformaciones.figura_3d())
+
+    def actualizar_plot_2D(self, p, titulo='', new_p=None):
+        self.ax_2D.clear()
+
+        c_p = 'ro'
+        c_l = 'r-'
+        l = 'Original'
+        for i in range(2):
+            # Puntos
+            self.ax_2D.plot([punto[0] for punto in p],
+                            [punto[1] for punto in p],
+                            c_p, label=l)
+            # Lineas
+            for i in range(len(p)):
+                if i == len(p) - 1:
+                    self.ax_2D.plot([p[0][0], p[len(p) - 1][0]], 
+                                    [p[0][1], p[len(p) - 1][1]], c_l)
+                    break
+                self.ax_2D.plot([p[i][0], p[i+1][0]],
+                                [p[i][1], p[i+1][1]], c_l)
+            
+            if new_p:
+                p = new_p
+                c_p = 'bo'
+                c_l = 'b-'
+                l = "Transformado"
+            else:
+                break
+
+        self.ax_2D.set_xlabel('X')
+        self.ax_2D.set_ylabel('Y')
+        self.ax_2D.set_title(f'{titulo}')
+        self.ax_2D.legend()
+        self.ax_2D.grid(True)
+        self.ax_2D.set_aspect('equal')
+
+        # plt.xlabel('X')
+        # plt.ylabel('Y')
+        # plt.title(f"{titulo}")
+        # plt.grid()
+        # plt.axis('equal')
+
+        self.canvas_2D.draw()
 
         self.update()
+        self.bind_validacion()
     
-    def actualizar_plot_3D(self):
+    def actualizar_plot_3D(self, p, new_p=None):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         
@@ -281,6 +322,130 @@ class GUI(ctk.CTk):
     def ocultar_entradas(self, e_restantes):
         for e in e_restantes:
             e.place_forget()
+
+    def aplicar_transformacion_2D(self):
+        transformacion = self.menu_opciones.get()
+        puntos_originales = Transformaciones.figura_2d()
+
+        if transformacion == "Rotación":
+            angulo_r = float(self.r_angulo_input.get())
+            centro_r_x = float(self.r_centro_x_input.get())
+            centro_r_y = float(self.r_centro_y_input.get())
+
+            puntos_rotados = [Transformaciones.rotacion_2d(punto, angulo_r, [centro_r_x, centro_r_y]) for punto in puntos_originales]
+
+            self.actualizar_plot_2D(puntos_originales, "Transformación: Rotación", puntos_rotados)
+        elif transformacion == "Traslación":
+            vector_traslacion = [float(self.t_x_input.get()), float(self.t_y_input.get())]
+
+            puntos_trasladados = Transformaciones.traslacion_2d(puntos_originales, vector_traslacion)
+
+            self.actualizar_plot_2D(puntos_originales, "Transformación: Traslación", puntos_trasladados)
+        elif transformacion == "Espejo":
+            eje = self.e_eje.get()
+
+            puntos_reflejados = Transformaciones.espejo_2d(puntos_originales, eje)
+
+            self.actualizar_plot_2D(puntos_originales, "Transformación: Espejo", puntos_reflejados)
+        elif transformacion == "Cambio de escala":
+            factor_x = float(self.ce_x_input.get())
+            factor_y = float(self.ce_y_input.get())
+
+            puntos_escalados = Transformaciones.cambio_escala_2d(puntos_originales, [factor_x, factor_y])
+
+            self.actualizar_plot_2D(puntos_originales, "Transformación: Cambio de escala", puntos_escalados)
+
+
+    def aplicar_transformacion_3D(self):
+        transformacion = self.menu_opciones_3D.get()
+
+    def validar_entrada(self, entrada, can_neg):
+        valor = entrada.get()
+
+        if can_neg:
+            if valor == '' or (valor == '-' and '.' not in valor):
+                return True
+            elif valor.replace('.', '', 1).lstrip('-').isdigit():
+                return True
+        elif valor.replace('.', '', 1).isdigit() and float(valor) >= 0:
+            return True
+
+        self.bell()
+        entrada.delete(len(valor)-1, ctk.END)
+        return False
+    def bind_validacion(self):
+        # Rotación
+        self.r_angulo_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.r_angulo_input, True))
+        self.r_centro_x_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.r_centro_x_input, False))
+        self.r_centro_y_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.r_centro_y_input, False))
+
+        # Traslación
+        self.t_x_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.t_x_input, True))
+        self.t_y_input.bind("<KeyRelease>", lambda event: self.validar_entrada(self.t_y_input, True))
+
+        # Espejo
+        # -
+
+class Transformaciones():
+
+# 2D
+
+    def rotacion_2d(punto, angulo, centro):
+        # Transformar el ángulo a radianes
+        theta = np.radians(angulo)
+
+        # Calcular las coordenadas relativas al centro de rotación
+        x_rel = punto[0] - centro[0]
+        y_rel = punto[1] - centro[1]
+
+        # Aplicar la matriz de rotación
+        x_rot = x_rel * np.cos(theta) - y_rel * np.sin(theta)
+        y_rot = x_rel * np.sin(theta) + y_rel * np.cos(theta)
+
+        # Regresar a las coordenadas originales
+        x_rot += centro[0]
+        y_rot += centro[1]
+
+        return [x_rot, y_rot]
+    
+    def traslacion_2d(puntos, vector_t):
+        # Suma de coordenadas con el vector de traslación
+        return [[punto[0] + vector_t[0], punto[1] + vector_t[1]] for punto in puntos]
+    
+    def espejo_2d(puntos, eje):
+        # Inversión de valores en base al eje
+        if eje == "Eje x":
+            return [[punto[0], -punto[1]] for punto in puntos]
+        elif eje == "Eje y":
+            return [[-punto[0], punto[1]] for punto in puntos]
+        
+    def cambio_escala_2d(puntos, factores):
+        # Calcular el centroide
+        centroid_x = sum(punto[0] for punto in puntos) / len(puntos)
+        centroid_y = sum(punto[1] for punto in puntos) / len(puntos)
+
+        # Ajustar cada punto al centroide
+        puntos_ajustados = [[punto[0] - centroid_x, punto[1] - centroid_y] for punto in puntos]
+
+        # Escalar los puntos ajustados
+        puntos_escala = [[punto[0] * factores[0], punto[1] * factores[1]] for punto in puntos_ajustados]
+
+        # Reajustar los puntos escalados al punto original
+        puntos_reajustados = [[punto[0] + centroid_x, punto[1] + centroid_y] for punto in puntos_escala]
+
+        return puntos_reajustados
+
+# 3D
+
+    
+
+# FIGURAS
+
+    def figura_2d():
+        return [[1, 1], [5, 1], [5, 5], [1, 5]] # Cuadrado
+    
+    def figura_3d():
+        return [[1, 0, 1], [5, 0, 1], [5, 0, 5], [1, 0, 5], [1, 4, 1], [5, 4, 1], [5, 4, 5], [1, 4, 5]] # Cubo
 
 if __name__ == "__main__":
     app = GUI()
