@@ -1,2 +1,2 @@
 # GUI_Transformaciones-geometricas
-Graficacion | Proyecto | Parcial 2 (Equipo) | Transformaciones geométricas a figuras 2D y 3D
+Graficacion | Parcial II | Proyecto | Transformaciones geométricas a figuras 2D y 3D
